@@ -24,30 +24,47 @@ import { LoadingSwap } from "@/components/ui/loading-swap"
 import { LoginFormValues, loginSchema } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
+import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 function LoginPage() {
-
   const {
-      register,
-      handleSubmit,
-      formState: { errors, isSubmitting },
-      setError,
-    } = useForm<LoginFormValues>({
-      resolver: zodResolver(loginSchema),
-      defaultValues: {
-        email: "",
-        password: "",
-      },
-      mode: "onSubmit",
-    });
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    mode: "onSubmit",
+  })
 
-    const onSubmit = async (data: LoginFormValues) => {
-        try {
-        }catch (err) {
-        
-        }
+  const router = useRouter()
+
+  const onSubmit = async (data: LoginFormValues) => {
+    await authClient.signIn.email(
+      {
+        email: data.email,
+        password: data.password,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => {
+          toast.success("Login Successful")
+          router.push("/")
+          router.refresh()
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message || "Login Failed")
+          setError("root", { message: ctx.error.message })
+        },
       }
-  
+    )
+  }
 
   return (
     <div className={cn("flex flex-col gap-6")}>
@@ -82,15 +99,23 @@ function LoginPage() {
                     Forgot your password?
                   </Link>
                 </div>
-                <PasswordInput id="password" {...register("password")} placeholder="Enter Your Password" required />
+                <PasswordInput
+                  id="password"
+                  {...register("password")}
+                  placeholder="Enter Your Password"
+                  required
+                />
                 <FieldError errors={[errors.password]} />
               </Field>
 
               <FieldSeparator />
               <Field>
-                <Button type="submit"><LoadingSwap isLoading={isSubmitting}>Login</LoadingSwap></Button>
+                <Button type="submit">
+                  <LoadingSwap isLoading={isSubmitting}>Login</LoadingSwap>
+                </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <Link href="/signup">Sign up</Link>
+                  Don&apos;t have an account?{" "}
+                  <Link href="/signup">Sign up</Link>
                 </FieldDescription>
               </Field>
             </FieldGroup>

@@ -19,10 +19,13 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { LoadingSwap } from "@/components/ui/loading-swap"
+import { authClient } from "@/lib/auth-client"
 import { SignupFormValues, signupSchema } from "@/types/auth"
 import { zodResolver } from "@hookform/resolvers/zod"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
+import { toast } from "sonner"
 
 function SignupPage() {
   const {
@@ -41,11 +44,27 @@ function SignupPage() {
     mode: "onSubmit",
   })
 
+  const router = useRouter()
   const onSubmit = async (data: SignupFormValues) => {
-    try {
-    }catch (err) {
-    
-    }
+    await authClient.signUp.email(
+      {
+        email: data.email,
+        password: data.password,
+        name: data.name,
+        callbackURL: "/",
+      },
+      {
+        onSuccess: () => {
+          toast.success("Signup Successful")
+          router.push("/")
+          router.refresh()
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message || "Signup Failed")
+          setError("root", { message: ctx.error.message })
+        },
+      }
+    )
   }
 
   return (
