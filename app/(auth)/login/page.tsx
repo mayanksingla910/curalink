@@ -50,13 +50,11 @@ function LoginPage() {
       {
         email: data.email,
         password: data.password,
-        callbackURL: "/",
       },
       {
         onSuccess: () => {
           toast.success("Login Successful")
-          router.push("/")
-          router.refresh()
+          router.push("/chat")
         },
         onError: (ctx) => {
           toast.error(ctx.error.message || "Login Failed")

@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +17,17 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { HugeiconsIcon } from "@hugeicons/react"
-import { SparklesIcon, CheckmarkBadgeIcon, CreditCardIcon, NotificationIcon, LogoutIcon } from "@hugeicons/core-free-icons"
+import {
+  SparklesIcon,
+  CheckmarkBadgeIcon,
+  CreditCardIcon,
+  NotificationIcon,
+  LogoutIcon,
+} from "@hugeicons/core-free-icons"
 import { ChevronsUpDown } from "lucide-react"
+import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
 
 export function NavUser({
   user,
@@ -34,6 +39,23 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+
+  const handleLogOut = async () => {
+    console.log("Logging out...")
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          console.log("Logout successful")
+          router.push("/")
+          toast.success("Logout Successful")
+        },
+        onError: (ctx) => {
+          toast.error(ctx.error.message || "Logout Failed")
+        },
+      },
+    })
+  }
 
   return (
     <SidebarMenu>
@@ -96,7 +118,7 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogOut}>
               <HugeiconsIcon icon={LogoutIcon} strokeWidth={2} />
               Log out
             </DropdownMenuItem>

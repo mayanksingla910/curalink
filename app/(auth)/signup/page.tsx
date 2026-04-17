@@ -51,13 +51,11 @@ function SignupPage() {
         email: data.email,
         password: data.password,
         name: data.name,
-        callbackURL: "/",
       },
       {
         onSuccess: () => {
           toast.success("Signup Successful")
-          router.push("/")
-          router.refresh()
+          router.push("/chat")
         },
         onError: (ctx) => {
           toast.error(ctx.error.message || "Signup Failed")

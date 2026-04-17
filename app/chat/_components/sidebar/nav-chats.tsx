@@ -35,7 +35,7 @@ export function NavChats({
         {Chats.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
-              <Link href={item.url}>
+              <Link href={"/chat/" + item.url}>
                 <span>{item.name}</span>
               </Link>
             </SidebarMenuButton>

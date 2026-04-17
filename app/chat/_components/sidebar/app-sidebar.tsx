@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import { Command, Send, Settings } from "lucide-react"
 import Link from "next/link"
+import NewChatButton from "./new-chat-button"
 
 const data = {
   user: {
@@ -38,22 +39,22 @@ const data = {
   chats: [
     {
       name: "Design Engineering",
-      url: "#",
+      url: "/design-engineering",
     },
     {
       name: "Sales & Marketing",
-      url: "#",
+      url: "/sales-marketing",
     },
     {
       name: "Travel",
-      url: "#",
+      url: "/travel",
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" {...props}>
+    <Sidebar variant="sidebar" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -71,7 +72,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+
+      <SidebarContent className="mt-4">
+        <NewChatButton />
         <NavChats Chats={data.chats} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>

@@ -28,7 +28,7 @@ export default function RootLayout({
         raleway.variable
       )}
     >
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider>{children}</ThemeProvider>
         <Toaster position="top-right" />
       </body>
