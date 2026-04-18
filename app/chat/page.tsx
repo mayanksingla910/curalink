@@ -1,7 +1,8 @@
+// app/chat/page.tsx (the new chat greeting page)
 "use client"
 
 import { AnimatePresence, motion } from "framer-motion"
-import { useChat } from "./context/chat-context"
+import { useChat } from "@/context/chat-context"
 
 export default function NewChatPage() {
   const { hasMessages } = useChat()
@@ -15,7 +16,7 @@ export default function NewChatPage() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
           transition={{ type: "spring", stiffness: 200, damping: 20 }}
-          className="flex h-full items-center justify-center pointer-events-none"
+          className="flex h-full items-center justify-center"
         >
           <h1 className="text-2xl font-semibold">What can I help you with?</h1>
         </motion.div>
