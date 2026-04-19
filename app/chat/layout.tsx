@@ -6,11 +6,15 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { ChatProvider } from "../../context/chat-context"
 import ThemeToggle from "@/components/theme-toggle"
 
-function ChatShell({ children }: { children: React.ReactNode }) {
+export default function ChatsLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
   return (
+      (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
@@ -29,16 +33,5 @@ function ChatShell({ children }: { children: React.ReactNode }) {
       </SidebarInset>
     </SidebarProvider>
   )
-}
-
-export default function ChatsLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <ChatProvider>
-      <ChatShell>{children}</ChatShell>
-    </ChatProvider>
   )
 }

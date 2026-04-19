@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useRef, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
 
 interface Chat {
   id: string
@@ -31,8 +32,16 @@ interface ChatContextType {
   patientContext: PatientContext | null
   chats: Chat[]
   sendMessage: (content: string) => Promise<void>
-  loadChat: (chatId: string, initialMessages: Message[], context: PatientContext | null) => void
-  startNewChat: (disease: string, name?: string, location?: string) => Promise<void>
+  loadChat: (
+    chatId: string,
+    initialMessages: Message[],
+    context: PatientContext | null
+  ) => void
+  startNewChat: (
+    disease: string,
+    name?: string,
+    location?: string
+  ) => Promise<void>
   setPatientContext: (ctx: PatientContext) => void
   resetChat: () => void
   addChat: (chat: Chat) => void
@@ -48,8 +57,12 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const isLoadingRef = useRef(false)
   const [currentChatId, setCurrentChatId] = useState<string | null>(null)
-  const [patientContext, setPatientContext] = useState<PatientContext | null>(null)
+  const [patientContext, setPatientContext] = useState<PatientContext | null>(
+    null
+  )
   const [chats, setChats] = useState<Chat[]>([])
+
+  const { data: session } = authClient.useSession()
 
   const addChat = useCallback((chat: Chat) => {
     setChats((prev) => {
@@ -71,16 +84,19 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
     isLoadingRef.current = false
   }, [])
 
-  const loadChat = useCallback((
-    chatId: string,
-    initialMessages: Message[],
-    context: PatientContext | null
-  ) => {
-    setCurrentChatId(chatId)
-    setMessages(initialMessages)
-    setPatientContext(context)
-    setStatus(null)
-  }, [])
+  const loadChat = useCallback(
+    (
+      chatId: string,
+      initialMessages: Message[],
+      context: PatientContext | null
+    ) => {
+      setCurrentChatId(chatId)
+      setMessages(initialMessages)
+      setPatientContext(context)
+      setStatus(null)
+    },
+    []
+  )
 
   const startNewChat = useCallback(
     async (disease: string, name?: string, location?: string) => {
@@ -119,7 +135,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         addChat({ id: chat.id, title: chat.title })
         chatId = chat.id
         setCurrentChatId(chat.id)
-        router.push(`/chat/${chat.id}`)
+        if (session) {
+          router.push(`/chat/${chat.id}`)
+        }
       }
 
       isLoadingRef.current = true
@@ -168,6 +186,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
                     sources: event.sources,
                   },
                 ])
+              } else if (event.type === "context_update") {
+                setPatientContext((prev) =>
+                  prev ? { ...prev, ...event.context } : event.context
+                )
               } else if (event.type === "error") {
                 setStatus(null)
                 setMessages((prev) => [
@@ -197,7 +219,7 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
         isLoadingRef.current = false
       }
     },
-    [currentChatId, patientContext, router, addChat]
+    [currentChatId, patientContext, router, addChat, session]
   )
 
   return (

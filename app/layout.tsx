@@ -4,6 +4,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import { ChatProvider } from "@/context/chat-context"
 
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-sans" })
 
@@ -29,7 +30,9 @@ export default function RootLayout({
       )}
     >
       <body suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ChatProvider>{children}</ChatProvider>
+        </ThemeProvider>
         <Toaster position="top-right" />
       </body>
     </html>

@@ -5,6 +5,8 @@ import { fetchAllSources } from "@/lib/pipeline/dataFetcher"
 import { rankResults } from "@/lib/pipeline/ranker"
 import { buildPrompt } from "@/lib/pipeline/contextBuilder"
 import { callLLM } from "@/lib/pipeline/llm"
+import { detectIntent } from "@/lib/pipeline/intent-detector"
+import { updateChatSummary } from "@/lib/pipeline/summary-updater"
 
 export async function POST(req: NextRequest) {
   const { chatId, content } = await req.json()
@@ -41,11 +43,51 @@ export async function POST(req: NextRequest) {
       }
 
       try {
+        send({ type: "status", message: "Understanding your question..." })
+
+        const intent = await detectIntent(
+          content,
+          chat.context?.disease ?? "",
+          chat.context?.diseases ?? []
+        )
+        console.log("Intent detected:", intent)
+        const updatedDiseases = [
+          ...new Set([...(chat.context?.diseases ?? []), ...intent.diseases]),
+        ]
+
+        if (
+          intent.isNewTopic ||
+          intent.isMultiDisease ||
+          intent.primaryDisease !== chat.context?.disease
+        ) {
+          await prisma.patientContext.upsert({
+            where: { chatId },
+            update: {
+              disease: intent.primaryDisease,
+              diseases: updatedDiseases,
+            },
+            create: {
+              chatId,
+              disease: intent.primaryDisease,
+              diseases: updatedDiseases,
+            },
+          })
+          // Send update to frontend so context stays in sync
+          send({
+            type: "context_update",
+            context: { disease: intent.primaryDisease },
+          })
+        }
+        console.log("Updated diseases:", updatedDiseases)
         // Step 1 — expand query
         send({ type: "status", message: "Expanding your query..." })
         const { pubmedQuery, openAlexQuery, trialsQuery } = await expandQuery(
-          content,
-          chat.context
+          intent.effectiveQuery, // use rewritten query
+          {
+            ...chat.context,
+            disease: intent.primaryDisease,
+            diseases: updatedDiseases,
+          }
         )
 
         // Step 2 — fetch in parallel
@@ -69,30 +111,52 @@ export async function POST(req: NextRequest) {
 
         // Step 3 — rank
         let ranked
-try {
-  ranked = rankResults(publications, trials, content, chat.context?.disease)
-  console.log("Ranked:", ranked.publications.length, "pubs,", ranked.trials.length, "trials")
-} catch (rankErr) {
-  console.error("Rank error:", rankErr)
-  throw rankErr
-}
+        try {
+          ranked = rankResults(
+            publications,
+            trials,
+            content,
+            intent.primaryDisease
+          )
+          console.log(
+            "Ranked:",
+            ranked.publications.length,
+            "pubs,",
+            ranked.trials.length,
+            "trials"
+          )
+        } catch (rankErr) {
+          console.error("Rank error:", rankErr)
+          throw rankErr
+        }
 
-console.log("Ranked publications:", ranked.publications.length)
-console.log("Ranked trials:", ranked.trials.length)
-console.log("Sample pub:", JSON.stringify(ranked.publications[0]).slice(0, 200))
+        console.log("Ranked publications:", ranked.publications.length)
+        console.log("Ranked trials:", ranked.trials.length)
+        console.log(
+          "Sample pub:",
+          JSON.stringify(ranked.publications[0]).slice(0, 200)
+        )
 
         // Step 4 — build prompt
         send({ type: "status", message: "Generating insights..." })
         const prompt = buildPrompt({
-          context: chat.context,
+          context: {
+            ...chat.context,
+            disease: intent.primaryDisease,
+            diseases: updatedDiseases, // ← pass updated diseases
+          },
           history: chat.messages,
           publications: ranked.publications,
+          summary: chat.summary,
           trials: ranked.trials,
           query: content,
         })
 
-console.log("Prompt length (chars):", prompt.length)
-console.log("Prompt length (approx tokens):", Math.round(prompt.length / 4))
+        console.log("Prompt length (chars):", prompt.length)
+        console.log(
+          "Prompt length (approx tokens):",
+          Math.round(prompt.length / 4)
+        )
 
         // Step 5 — call LLM
         let result
@@ -126,16 +190,31 @@ console.log("Prompt length (approx tokens):", Math.round(prompt.length / 4))
           },
         })
 
+        const updatedSummary = await updateChatSummary(
+          chat.summary,
+          content,
+          result.conditionOverview ?? "",
+          updatedDiseases
+        )
+
         // Update chat timestamp
         await prisma.chat.update({
           where: { id: chatId },
-          data: { updatedAt: new Date() },
+          data: { updatedAt: new Date(), summary: updatedSummary },
         })
 
         // Step 7 — send final result
-        send({ type: "done", result, sources: ranked })
+        send({
+          type: "done",
+          result: {
+            ...result,
+            primaryDisease: intent.primaryDisease,
+          },
+          sources: ranked,
+        })
         controller.close()
       } catch (err) {
+        console.error("Pipeline error:", err)
         send({
           type: "error",
           message: "Something went wrong. Please try again.",

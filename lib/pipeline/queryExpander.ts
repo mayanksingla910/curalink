@@ -1,23 +1,29 @@
 import { callGroq } from "./llm-client"
-import { Context } from "@/types/pipeline"
 
-export async function expandQuery(query: string, context: Context | null) {
+export async function expandQuery(query: string, context: any) {
   const disease = (context?.disease ?? "").trim()
+  const diseases: string[] = context?.diseases ?? [disease]
 
+  const diseaseContext =
+    diseases.length > 1
+      ? `Multiple conditions: ${diseases.join(", ")}`
+      : `Condition: ${disease}`
   try {
     const result = await callGroq(
       `You are a medical search query expert.
 
-Patient disease: ${disease}
-User question: ${query}
+    ${diseaseContext}
+    User question: ${query}
 
-Respond ONLY with valid JSON:
-{
-  "pubmedQuery": "optimized PubMed boolean query using MeSH terms and AND/OR operators",
-  "openAlexQuery": "natural language search string for this condition and topic",
-  "clinicalTrialCondition": "exact condition name for ClinicalTrials.gov",
-  "clinicalTrialKeyword": "intervention or treatment keyword only"
-}`,
+    ${diseases.length > 1 ? `The user is asking about the relationship or interaction between these conditions. Build queries that capture this relationship.` : ""}
+
+    Respond ONLY with valid JSON:
+    {
+      "pubmedQuery": "PubMed boolean query — if multiple diseases, use AND to find papers covering both",
+      "openAlexQuery": "natural language search covering all mentioned conditions",
+      "clinicalTrialCondition": "primary condition for ClinicalTrials.gov",
+      "clinicalTrialKeyword": "intervention or secondary condition as keyword"
+    }`,
       300
     )
 

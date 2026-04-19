@@ -78,8 +78,9 @@ model Verification {
 model Chat {
   id          String    @id @default(cuid())
   title       String    @default("New Chat")
-  userId      String?   // nullable = guest chat
+  userId      String?  
   isGuest     Boolean   @default(false)
+  summary     String?   @db.Text 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
@@ -109,6 +110,7 @@ model PatientContext {
   chatId    String   @unique
   name      String?
   disease   String
+  diseases  String[] 
   location  String?
   notes     String?  @db.Text
   createdAt DateTime @default(now())

@@ -7,7 +7,7 @@ import { NavChats } from "@/app/chat/_components/sidebar/nav-chats"
 import { NavSecondary } from "@/app/chat/_components/sidebar/nav-secondary"
 import { NavUser } from "@/app/chat/_components/sidebar/nav-user"
 import { authClient } from "@/lib/auth-client"
-import { useChat } from "@/context/chat-context" // ← fix this path to match yours
+import { useChat } from "@/context/chat-context"
 import {
   Sidebar,
   SidebarContent,
@@ -30,10 +30,27 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { data: session, isPending } = authClient.useSession()
   const { resetChat } = useChat()
   const router = useRouter()
+  const contentRef = React.useRef<HTMLDivElement>(null)
+  const [isScrolled, setIsScrolled] = React.useState(false)
+
+  React.useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+
+    const handleScroll = () => setIsScrolled(el.scrollTop > 0)
+    el.addEventListener("scroll", handleScroll, { passive: true })
+    return () => el.removeEventListener("scroll", handleScroll)
+  }, [])
 
   return (
     <Sidebar variant="sidebar" {...props}>
-      <SidebarHeader>
+      <SidebarHeader
+        className={`transition-shadow duration-200 pb-0 ${
+          isScrolled
+            ? "border-b shadow-[0_4px_0_0_hsl(var(--sidebar-border))]"
+            : "border-b border-transparent"
+        }`}
+      >
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
@@ -66,11 +83,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent ref={contentRef}>
         <NavChats />
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter className="pt-0 border-t bg-sidebar  shadow-[2px_0_0_0_hsl(var(--sidebar-border))]">
         <NavSecondary items={secondaryNavItems} className="mt-auto" />
         {isPending ? (
           <div className="h-12 w-full animate-pulse rounded-md bg-muted/50" />
