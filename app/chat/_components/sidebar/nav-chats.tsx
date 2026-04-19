@@ -32,7 +32,7 @@ import { toast } from "sonner"
 import { useChat } from "@/context/chat-context"
 
 export function NavChats() {
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const { chats, addChat, removeChat } = useChat()
 
   const [renameId, setRenameId] = useState<string | null>(null)
@@ -111,8 +111,8 @@ export function NavChats() {
           )}
           {chats.map((item) => (
             <SidebarMenuItem key={item.id}>
-              <SidebarMenuButton asChild>
-                <Link href={"/chat/" + item.id}>
+              <SidebarMenuButton asChild >
+                <Link href={"/chat/" + item.id} onClick={() => setOpenMobile(false)}>
                   <span className="truncate">{item.title}</span>
                 </Link>
               </SidebarMenuButton>

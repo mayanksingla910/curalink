@@ -18,6 +18,7 @@ import {
   SidebarMenuItem,
   SidebarGroup,
   SidebarGroupContent,
+  useSidebar,
 } from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 
@@ -32,6 +33,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const contentRef = React.useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = React.useState(false)
+  const { setOpenMobile } = useSidebar()
 
   React.useEffect(() => {
     const el = contentRef.current
@@ -83,6 +85,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarGroupContent>
               <SidebarMenuButton
                 onClick={() => {
+                  setOpenMobile(false)
                   resetChat()
                   router.push("/chat")
                 }}
