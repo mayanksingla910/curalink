@@ -48,6 +48,7 @@ export function NavUser({
         onSuccess: () => {
           console.log("Logout successful")
           router.push("/")
+          router.refresh()
           toast.success("Logout Successful")
         },
         onError: (ctx) => {
