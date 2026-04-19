@@ -10,6 +10,7 @@ interface LLMResult {
   disclaimer: string
   keyFindings?: string[]
   extendedSummary?: string
+  primaryDisease: string
 }
 
 interface Props {
