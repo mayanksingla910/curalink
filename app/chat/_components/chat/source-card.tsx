@@ -2,7 +2,7 @@ import Link from "next/link"
 
 interface Publication {
   title: string
-  authors: string[]
+  authors: string[] | string
   year: number
   source: "pubmed" | "openalex"
   url: string

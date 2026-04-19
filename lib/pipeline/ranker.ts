@@ -50,12 +50,3 @@ export function rankResults(
     trials: trials.filter((t) => t && t.title).slice(0, 4),
   }
 }
-function deduplicateByTitle(items: any[]) {
-  const seen = new Set<string>();
-  return items.filter((item) => {
-    const key = item.title.toLowerCase().replace(/\s+/g, " ").slice(0, 60);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-}
