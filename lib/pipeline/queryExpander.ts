@@ -1,7 +1,7 @@
 import { callGroq } from "./llm-client"
 import { Context } from "@/types/pipeline"
 
-export async function expandQuery(query: string, context: Context) {
+export async function expandQuery(query: string, context: Context | null) {
   const disease = (context?.disease ?? "").trim()
 
   try {
