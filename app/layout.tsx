@@ -5,6 +5,16 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
 import { ChatProvider } from "@/context/chat-context"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Curalink",
+  description: "AI Medical Research Assistant",
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
+}
 
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-sans" })
 
